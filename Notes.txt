@@ -1,0 +1,5 @@
+Notes
+=======
+Order of installations
+Commands used
+Extend to GPU usage
