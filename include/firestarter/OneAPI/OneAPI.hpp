@@ -1,6 +1,6 @@
 /******************************************************************************
  * FIRESTARTER - A Processor Stress Test Utility
- * Copyright (C) 2020-2023 TU Dresden, Center for Information Services and High
+ * Copyright (C) 2023 TU Dresden, Center for Information Services and High
  * Performance Computing
  *
  * This program is free software: you can redistribute it and/or modify
@@ -14,26 +14,39 @@
  * GNU General Public License for more details.
  *
  * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/\>.
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Contact: daniel.hackenberg@tu-dresden.de
  *****************************************************************************/
 
 #pragma once
 
-#include <firestarter/Optimizer/Population.hpp>
+#include <condition_variable>
+#include <mutex>
+#include <thread>
+#include <vector>
 
-namespace firestarter::optimizer {
+namespace firestarter::oneapi {
 
-class Algorithm {
+class OneAPI {
+private:
+  std::thread _initThread;
+  std::condition_variable _waitForInitCv;
+  std::mutex _waitForInitCvMutex;
+
+  static void initGpus(std::condition_variable &cv,
+                       volatile unsigned long long *loadVar, bool useFloat,
+                       bool useDouble, unsigned matrixSize, int gpus);
+
 public:
-  Algorithm() {}
-  virtual ~Algorithm() {}
+  OneAPI(volatile unsigned long long *loadVar, bool useFloat, bool useDouble,
+       unsigned matrixSize, int gpus);
 
-  virtual void checkPopulation(Population const &pop,
-                               std::size_t populationSize) = 0;
-
-  virtual Population evolve(Population &pop) = 0;
+  ~OneAPI() {
+    if (_initThread.joinable()) {
+      _initThread.join();
+    }
+  }
 };
 
-} // namespace firestarter::optimizer
+} // namespace firestarter::oneapi

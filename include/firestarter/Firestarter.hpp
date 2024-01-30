@@ -1,6 +1,6 @@
 /******************************************************************************
  * FIRESTARTER - A Processor Stress Test Utility
- * Copyright (C) 2020 TU Dresden, Center for Information Services and High
+ * Copyright (C) 2020-2023 TU Dresden, Center for Information Services and High
  * Performance Computing
  *
  * This program is free software: you can redistribute it and/or modify
@@ -24,6 +24,12 @@
 #ifdef FIRESTARTER_BUILD_CUDA
 #include <firestarter/Cuda/Cuda.hpp>
 #endif
+
+#ifdef FIRESTARTER_BUILD_ONEAPI
+#include <firestarter/OneAPI/OneAPI.hpp>
+#endif
+
+
 
 #include <firestarter/Constants.hpp>
 
@@ -132,6 +138,10 @@ private:
   std::unique_ptr<cuda::Cuda> _cuda;
 #endif
 
+#ifdef FIRESTARTER_BUILD_ONEAPI
+  std::unique_ptr<oneapi::OneAPI> _oneapi;
+#endif
+
 #if defined(linux) || defined(__linux__)
   inline static std::unique_ptr<optimizer::OptimizerWorker> _optimizer;
   std::shared_ptr<measurement::MeasurementWorker> _measurementWorker;
@@ -162,9 +172,6 @@ private:
   // LoadThreadWorker.cpp
   void signalLoadWorkers(int comm);
   static void loadThreadWorker(std::shared_ptr<LoadWorkerData> td);
-
-  // CudaWorker.cpp
-  static void *cudaWorker(void *cudaData);
 
 #ifdef FIRESTARTER_DEBUG_FEATURES
   // DumpRegisterWorker.cpp
