@@ -40,16 +40,10 @@ OptimizerWorker::OptimizerWorker(
     : _algorithm(std::move(algorithm)), _population(population),
       _optimizationAlgorithm(optimizationAlgorithm), _individuals(individuals),
       _preheat(preheat) {
-//#ifdef FIRESTARTER_WITH_CALIPER
-//   CALI_MARK_BEGIN("pthread_create-optimizer-thread");
-//#endif
    pthread_create(
       &this->workerThread, NULL,
       reinterpret_cast<void *(*)(void *)>(OptimizerWorker::optimizerThread),
       this);
-//#ifdef FIRESTARTER_WITH_CALIPER
-//   CALI_MARK_END("pthread_create-optimizer-thread");
-//#endif
 }
 
 void OptimizerWorker::kill() {
@@ -70,15 +64,9 @@ void *OptimizerWorker::optimizerThread(void *optimizerWorker) {
 
   auto _this = reinterpret_cast<OptimizerWorker *>(optimizerWorker);
 
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_BEGIN("pthread-optimizer");
-//#endif
 #ifndef __APPLE__
   pthread_setname_np(pthread_self(), "Optimizer");
 #endif
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_END("pthread-optimizer");
-//#endif
 
   // heat the cpu before attempting to optimize
   std::this_thread::sleep_for(_this->_preheat);

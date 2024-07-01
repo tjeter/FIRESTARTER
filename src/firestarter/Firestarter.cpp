@@ -84,16 +84,10 @@ Firestarter::Firestarter(
       _nsga2_cr(nsga2_cr), _nsga2_m(nsga2_m) {
   int returnCode;
 
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("load");
-//  #endif
   _load = (_period * _loadPercent) / 100;
   if (_loadPercent == 100 || _load == std::chrono::microseconds::zero()) {
     _period = std::chrono::microseconds::zero();
   }
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("load");
-//  #endif
 
 #if defined(linux) || defined(__linux__)
 #else
@@ -186,9 +180,6 @@ Firestarter::Firestarter(
 
 #if defined(linux) || defined(__linux__)
   if (_measurement || listMetrics || _optimize) {
-//   #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("set-measurement-worker");
-//   #endif
     _measurementWorker = std::make_shared<measurement::MeasurementWorker>(
         measurementInterval, this->environment().requestedNumThreads(),
         metricPaths, stdinMetrics);
@@ -228,15 +219,9 @@ Firestarter::Firestarter(
         std::exit(EXIT_FAILURE);
       }
     }
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("set-measurement-worker");
-//  #endif
   }
 
   if (_optimize) {
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("Optimize-Firestarter");
-//  #endif
     auto applySettings = std::bind(
         [this](std::vector<std::pair<std::string, unsigned>> const &setting) {
           using Clock = std::chrono::high_resolution_clock;
@@ -326,25 +311,16 @@ Firestarter::Firestarter(
     _population = firestarter::optimizer::Population(std::move(prob));
 
     if (_optimizationAlgorithm == "NSGA2") {
-//    #ifdef FIRESTARTER_WITH_CALIPER
-//      CALI_MARK_BEGIN("optimize-with-NSGA2");
-//    #endif
       _algorithm = std::make_unique<firestarter::optimizer::algorithm::NSGA2>(
           _generations, _nsga2_cr, _nsga2_m);
     } else {
       throw std::invalid_argument("Algorithm " + _optimizationAlgorithm +
                                   " unknown.");
     }
-//    #ifdef FIRESTARTER_WITH_CALIPER
-//      CALI_MARK_END("optimize-with-NSGA2");
-//    #endif
 
     _algorithm->checkPopulation(
         static_cast<firestarter::optimizer::Population const &>(_population),
         _individuals);
-//   #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("Optimize-Firestarter");
-//   #endif
   }
 #endif
 
@@ -398,32 +374,20 @@ void Firestarter::mainThread() {
 
 #if defined(linux) || defined(__linux__)
   // if measurement is enabled, start it here
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("main-thread-measurement");
-//  #endif
   if (_measurement) {
     _measurementWorker->startMeasurement();
   }
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("main-thread-measurement");
-//  #endif
 #endif
 
   this->signalWork();
 
 #ifdef FIRESTARTER_DEBUG_FEATURES
   if (_dumpRegisters) {
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("dump-registers");
-//  #endif
     int returnCode;
     if (EXIT_SUCCESS != (returnCode = this->initDumpRegisterWorker(
                              _dumpRegistersTimeDelta, _dumpRegistersOutpath))) {
       std::exit(returnCode);
     }
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("dump-registers");
-//  #endif
   }
 #endif
 
@@ -477,9 +441,6 @@ void Firestarter::mainThread() {
 #if defined(linux) || defined(__linux__)
   // if measurment is enabled, stop it here
   if (_measurement) {
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("measurement-disabled");
-//  #endif
     // TODO: clear this up
     log::info() << "metric,num_timepoints,duration_ms,average,stddev";
     for (auto const &[name, sum] :
@@ -488,9 +449,6 @@ void Firestarter::mainThread() {
                   << sum.duration.count() << "," << sum.average << ","
                   << sum.stddev;
     }
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("measurement-disabled");
-//  #endif
   }
 #endif
 
@@ -535,13 +493,7 @@ void Firestarter::sigtermHandler(int signum) {
 #if defined(linux) || defined(__linux__)
   // if we have optimization running stop it
   if (Firestarter::_optimizer) {
-//    #ifdef FIRESTARTER_WITH_CALIPER
-//	  CALI_MARK_BEGIN("optimizer-disabled");
-//    #endif
     Firestarter::_optimizer->kill();
-//    #ifdef FIRESTARTER_WITH_CALIPER
-//	  CALI_MARK_END("optimizer-disabled");
-//    #endif
   }
 #endif
 }

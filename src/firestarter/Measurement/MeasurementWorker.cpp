@@ -30,13 +30,6 @@ extern "C" {
 }
 #endif
 
-/********** Added Adiak and Caliper headers *********/
-#define FIRESTARTER_WITH_CALIPER
-#ifdef FIRESTARTER_WITH_CALIPER
-#include <adiak.hpp>
-#include <caliper/cali.h>
-#endif
-
 void insertCallback(void *cls, const char *metricName, int64_t timeSinceEpoch,
                     double value) {
   static_cast<firestarter::measurement::MeasurementWorker *>(cls)
@@ -128,29 +121,17 @@ MeasurementWorker::MeasurementWorker(
 
   this->availableMetricsString = ss.str();
 
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("pthread_create-data-acquisition-worker");
-//  #endif
   pthread_create(&this->workerThread, NULL,
                  reinterpret_cast<void *(*)(void *)>(
                      MeasurementWorker::dataAcquisitionWorker),
                  this);
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//     CALI_MARK_END("pthread_create-data-acquisition-worker");
-//  #endif
 
   // create a worker for getting metric values from stdin
   if (this->_stdinMetrics.size() > 0) {
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_BEGIN("pthread_create-stdin-data-acquisition-worker");
-//  #endif
     pthread_create(&this->stdinThread, NULL,
                    reinterpret_cast<void *(*)(void *)>(
                        MeasurementWorker::stdinDataAcquisitionWorker),
                    this);
-//  #ifdef FIRESTARTER_WITH_CALIPER
-//    CALI_MARK_END("pthread_create-stdin-data-acquisition-worker");
-//  #endif
   }
 }
 
@@ -326,22 +307,13 @@ MeasurementWorker::getValues(std::chrono::milliseconds startDelta,
 }
 
 int *MeasurementWorker::dataAcquisitionWorker(void *measurementWorker) {
-//#ifdef FIRESTARTER_WITH_CALIPER
-//   CALI_MARK_BEGIN("Data-Acquisition-Worker");
-//#endif
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
   auto _this = reinterpret_cast<MeasurementWorker *>(measurementWorker);
 
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_BEGIN("data-acquisition");
-//#endif
 #ifndef __APPLE__
   pthread_setname_np(pthread_self(), "DataAcquisition");
 #endif
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_END("data-acquisition");
-//#endif
 
   using clock = std::chrono::high_resolution_clock;
 
@@ -437,28 +409,16 @@ int *MeasurementWorker::dataAcquisitionWorker(void *measurementWorker) {
 
     std::this_thread::sleep_for(nextWake - clock::now());
   }
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_END("Data-Acquisition-Worker");
-//#endif
 }
 
 int *MeasurementWorker::stdinDataAcquisitionWorker(void *measurementWorker) {
-//#ifdef FIRESTARTER_WITH_CALIPER
-//   CALI_MARK_BEGIN("Stdin-Data-Acquisition-Worker");
-//#endif
   pthread_setcanceltype(PTHREAD_CANCEL_ASYNCHRONOUS, NULL);
 
   auto _this = reinterpret_cast<MeasurementWorker *>(measurementWorker);
 
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_BEGIN("stdin-data-acquisition");
-//#endif
 #ifndef __APPLE__
   pthread_setname_np(pthread_self(), "StdinDataAcquis");
 #endif
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_END("stdin-data-acquisition");
-//#endif
 
   for (std::string line; std::getline(std::cin, line);) {
     int64_t time;
@@ -476,9 +436,5 @@ int *MeasurementWorker::stdinDataAcquisitionWorker(void *measurementWorker) {
       }
     }
   }
-//#ifdef FIRESTARTER_WITH_CALIPER
-//   CALI_MARK_END("Stdin-Data-Acquisition-Worker");
-//#endif
-
   return NULL;
 }

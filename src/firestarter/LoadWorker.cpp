@@ -54,9 +54,6 @@ using namespace firestarter;
 auto aligned_free_deleter = [](void *p) { ALIGNED_FREE(p); };
 
 int Firestarter::initLoadWorkers(bool lowLoad, unsigned long long period) {
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_BEGIN("Load-Workers");
-//#endif
   int returnCode;
 
   if (EXIT_SUCCESS != (returnCode = this->environment().setCpuAffinity(0))) {
@@ -122,9 +119,6 @@ int Firestarter::initLoadWorkers(bool lowLoad, unsigned long long period) {
 
   this->signalLoadWorkers(THREAD_INIT);
 
-//#ifdef FIRESTARTER_WITH_CALIPER
-//  CALI_MARK_END("Load-Workers");
-//#endif
   return EXIT_SUCCESS;
 }
 
